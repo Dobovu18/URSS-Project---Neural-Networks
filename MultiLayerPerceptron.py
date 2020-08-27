@@ -146,7 +146,7 @@ def neuralNetworkPerformanceTest(hidden_nodes, hidden_layers, learning_rate, tra
     
     return performance
 
-#-----------------------------------------------------------------------------------------------------------
+#[Variables]#\/\/\/\/\/\/\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
 hidden_nodes = 100
 hidden_layers = 2
 learning_rate = 0.2
