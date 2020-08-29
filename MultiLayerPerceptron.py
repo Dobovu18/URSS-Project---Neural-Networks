@@ -4,6 +4,8 @@ import random
 import matplotlib.pyplot as plt
 
 #Neural network designed to classify images of pictures
+#Training set of data: http://www.pjreddie.com/media/files/mnist_train.csv
+#Test set of data: http://www.pjreddie.com/media/files/mnist_test.csv
 #Code inspired by 'Make Your Own Neural Network' by Tariq Rashid and 
 #'Deep Learning: An Introduction for Applied Mathematicians' by Catherine F. Higham and Desmond J. Higham.
 
@@ -31,8 +33,6 @@ class neuralNetwork:
         self.activation = lambda x: scipy.special.expit(x) #Sigmoid activation function
         self.d_activation = lambda x: self.activation(x) * (1 - self.activation(x))
         
-        
-
     def train(self, inputs_list, targets_list):
         #Train the neural network on one test sample
         inputs = np.array(inputs_list, ndmin = 2).T
@@ -69,7 +69,6 @@ class neuralNetwork:
         #self.W[2] -= self.lr * np.dot((output_errors * self.d_activation(z[2])), np.transpose(a[1]))
         #For some reason switching to this method for gradient descent gave more accurate results?
     
-
     def train_from_file(self, training_file, sample_size, epochs):
         #Train network on a training set from a given file
         training_data_file = open(training_file, 'r')
@@ -79,6 +78,8 @@ class neuralNetwork:
         records = training_data_list
         if (sample_size <= len(training_data_list)):
             records = random.sample(training_data_list, sample_size)
+        elif(sample_size > len(training_data_file)):
+            records = training_data_list
 
         #Train over epochs
         for e in range(epochs):
@@ -88,9 +89,6 @@ class neuralNetwork:
                 targets = np.zeros(self.networkStructure[self.L - 1]) + 0.01
                 targets[int(all_values[0])] = 0.99
                 self.train(inputs, targets)
-                
-            
-    
 
     def predict(self, inputs_list):
         #Predict the output given an input
@@ -106,13 +104,10 @@ class neuralNetwork:
 
 #-----------------------------------------------------------------------------------------------------------
 
-def neuralNetworkPerformanceTest(hidden_nodes, hidden_layers, learning_rate, training_sample_size, epochs):
+def neuralNetworkPerformanceTest(hidden_nodes, hidden_layers, learning_rate, training_sample_size, epochs, number_of_experiments):
     #--[Configure the Network]
     input_nodes = 784 #input_nodes should be left untouched
     output_nodes = 10 #output_nodes should be left untouched
-
-    #These variables here can be played around with
-
 
     #--[Create and Train the Network]
     n = neuralNetwork(input_nodes, hidden_nodes, hidden_layers, output_nodes, learning_rate)
@@ -123,7 +118,7 @@ def neuralNetworkPerformanceTest(hidden_nodes, hidden_layers, learning_rate, tra
     test_data_list = test_data_file.readlines()
     test_data_file.close()
 
-    N = 5 #Number of repeats for the experiment
+    N = number_of_experiments #Number of repeats for the experiment
 
     performance = [0.0] * N #Performance for N experiments
 
@@ -147,13 +142,29 @@ def neuralNetworkPerformanceTest(hidden_nodes, hidden_layers, learning_rate, tra
     return performance
 
 #[Variables]#\/\/\/\/\/\/\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
-hidden_nodes = 100
-hidden_layers = 2
-learning_rate = 0.2
-training_sample_size = 60000
-epochs = 3
+#✔
+#start_time = time.time() #Setting a timer for how long the code runs for
 
-performance = neuralNetworkPerformanceTest(hidden_nodes, hidden_layers, learning_rate, training_sample_size, epochs)
-print("Performance Average: ", np.average(performance))
-print("Performance Standard Deviation: ", np.std(performance))
-print("Performance Raw Data: ", performance)
+hidden_nodes = 600 #np.array(range(10, 110, 10)) #100
+hidden_layers = 1 #np.array(range(1, 11, 1))
+learning_rate = 0.2 #np.linspace(0, 3, 61)
+training_sample_size = 60000 #np.array([100, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000, 60000]
+epochs = 1 #np.array(range(1, 11))
+number_of_experiments = 3
+
+#performance_rating = []
+
+#for x in hidden_nodes:
+#    performance_rating.append(np.average(neuralNetworkPerformanceTest(x, hidden_layers, learning_rate, training_sample_size, epochs, 5)))
+
+#plt.plot(hidden_nodes, performance_rating, label = 'hidden layers = 2\nlearning rate = 0.2\ntraining set size = 60000\nepochs = 1')
+#plt.title("Number of Hidden Nodes vs Performance")
+#plt.ylabel("Performance")
+#plt.xlabel("Number of Hidden Nodes")
+#plt.legend()
+#plt.show()
+
+performance = neuralNetworkPerformanceTest(hidden_nodes, hidden_layers, learning_rate, training_sample_size, epochs, number_of_experiments)
+print(performance)
+print(np.average(performance))
+print(np.std(performance))
