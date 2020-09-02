@@ -82,6 +82,7 @@ class neuralNetwork:
     def train_from_file(self, epochs):
         #Train over epochs
         for e in range(epochs):
+            random.shuffle(self.records)
             for record in self.records:
                 all_values = record.split(',')
                 inputs = (np.asfarray(all_values[1:]) / 255.0 * 0.99) + 0.01 #Preparing inputs from file, task/file specific
@@ -150,7 +151,6 @@ def neuralNetworkPerformanceTest(hidden_nodes = 100, hidden_layers = 2, learning
     
     return performance
 
-
 def neuralNetworkCostFunctionTest(hidden_nodes = 100, hidden_layers = 2, learning_rate = 0.5, training_sample_size = 20000, epochs = 1, number_of_experiments = 3, training_file = "mnist_train.csv", train = True):
     #--[Configure the Network]
     input_nodes = 784 #input_nodes should be left untouched
@@ -166,34 +166,44 @@ def neuralNetworkCostFunctionTest(hidden_nodes = 100, hidden_layers = 2, learnin
     
     return cost
 
-
 #[Variables]#\/\/\/\/\/\/\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
-#✔
 
-#results = neuralNetworkPerformanceTest()
-#print("Average: ", np.average(results))
-#print("Standard Deviation: ", np.std(results))
-#print("Raw Results: ", results)
-
-#n = neuralNetwork(784, 100, 2, 10, 0.5, "mnist_train.csv", 60000)
-#n.train_from_file(3)
-#print("Cost Function Value: ", n.getCost())
-
-#hiddenLayers = np.array(range(1, 11, 1)) ✔
-#hiddenNodes = np.array(range(25, 625, 25)) ✔
-#learningRate = np.linspace(0, 3, 61) ✔
-#sampleSize = np.array([100, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000, 60000]) ✔
-#epoch = np.array(range(1, 11))
+#hiddenLayers = np.array(range(1, 11, 1)) #✔
+#hiddenNodes = np.array(range(25, 625, 25)) #✔
+#learningRate = np.linspace(0, 3, 61) #✔
+#sampleSize = np.array([100, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000, 60000]) #✔
+#epoch = np.array(range(1, 11)) #✔
 #----------------------------------------------------------------------------------------------------------------
+
+print(neuralNetworkCostFunctionTest())
+print(neuralNetworkPerformanceTest())
+
+#--[Neural Network Cost]-------------------------------------------------------------------------------------
+#cost_avg = []
+#cost_min_err = []
+#cost_max_err = []
+
+#for x in epoch:
+#    cost = neuralNetworkCostFunctionTest(epochs = x) #change
+    
+#    avg = np.average(cost)
+#    min_err = avg - np.min(cost)
+#    max_err = np.max(cost) - avg
+
+#    cost_avg.append(avg)
+#    cost_min_err.append(min_err)
+#    cost_max_err.append(max_err)
+
+#cost_err = [cost_min_err, cost_max_err]
+
+#--[Neural Network Performance]------------------------------------------------------------------------------
 #performance_avg = []
 #performance_min_err = []
 #performance_max_err = []
 
-#legendLabel = "hidden layers = 2\nnodes per hidden layer = 100\nlearning rate = 0.5\ntraining set size = 20000" #change
-
 #Processing values to plot on the graph
 #for x in epoch: #Change
-#        performance = neuralNetworkPerformanceTest(epochs = x, training_sample_size=60000) #Change
+#        performance = neuralNetworkPerformanceTest(epochs = x) #Change
 
 #        avg = np.average(performance) 
 #        min_err = avg - np.min(performance)
@@ -205,18 +215,19 @@ def neuralNetworkCostFunctionTest(hidden_nodes = 100, hidden_layers = 2, learnin
 
 #performance_err = [performance_min_err, performance_max_err]
 
-
+#--[Graph Creation]------------------------------------------------------------------------------------------
+#legendLabel = "hidden layers = 2\nnodes per hidden layer = 100\nlearning rate = 0.5\ntraining set size = 20000" #change
 #Plotting/Creating the graph
-#plt.errorbar(epoch, performance_avg, #Change
-#            yerr = performance_err,
+#plt.errorbar(epoch, cost_avg, #Change
+#            yerr = cost_err,
 #            label = legendLabel,
 #            fmt = '-x',
 #            ecolor = 'red',
 #            capsize = 2)
 
-#plt.title("Number Of Epochs vs Performance") #Change
+#plt.title("Number Of Epochs vs Value Of Cost Function") #Change
 #plt.xlabel("Number Of Epochs") #Change
-#plt.ylabel("Performance")
+#plt.ylabel("Value Of Cost Function")
 #plt.legend()
 #plt.grid(b=True,
 #        which='major',
@@ -229,4 +240,3 @@ def neuralNetworkCostFunctionTest(hidden_nodes = 100, hidden_layers = 2, learnin
 #        linestyle='-', 
 #        alpha=0.2)
 #plt.show()
-
