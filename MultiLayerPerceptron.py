@@ -46,6 +46,10 @@ class neuralNetwork:
         elif(self.sample_size > len(self.training_data_file)):
             self.records = self.training_data_list
 
+        #Plotting cost function as neural network learns
+        #self.counter = 0
+        #self.costval = []
+
     def train(self, inputs_list, targets_list):
         #Train the neural network on one test sample
         inputs = np.array(inputs_list, ndmin = 2).T
@@ -72,13 +76,7 @@ class neuralNetwork:
         for i in reversed(range(1, self.L)):
             self.W[i] -= self.lr * np.dot(d[i], np.transpose(a[i - 1]))
             self.b[i] -= self.lr * d[i]
-            
-        #output_errors = a[2] - targets #d[2]
-        #hidden_errors = np.dot(self.W[2].T, output_errors) #d[1]
-        #self.W[1] -= self.lr * np.dot((hidden_errors * self.d_activation(z[1])), np.transpose(a[0]))#learns slower??
-        #self.W[2] -= self.lr * np.dot((output_errors * self.d_activation(z[2])), np.transpose(a[1]))
-        #For some reason switching to this method for gradient descent gave more accurate results?
-    
+               
     def train_from_file(self, epochs):
         #Train over epochs
         for e in range(epochs):
@@ -89,6 +87,11 @@ class neuralNetwork:
                 targets = np.zeros(self.networkStructure[self.L - 1]) + 0.01
                 targets[int(all_values[0])] = 0.99
                 self.train(inputs, targets)
+                #self.counter += 1
+                #self.costval.append(self.getCost())
+    
+#    def getTrainingInfo(self):
+#        return range(self.counter), self.costval
 
     def getCost(self):
         #Calculating the cost/empircial risk of the neural network
@@ -177,6 +180,15 @@ def neuralNetworkCostFunctionTest(hidden_nodes = 100, hidden_layers = 2, learnin
 
 print(neuralNetworkCostFunctionTest())
 print(neuralNetworkPerformanceTest())
+
+#--[Tracking Neural Network Training Progress]---------------------------------------------------------------
+neuralNetwork_1 = neuralNetwork(784, 100, 1, 10, 0.8, "mnist_train.csv", 100)
+neuralNetwork_1.train_from_file(10)
+#plt.plot(neuralNetwork_1.getTrainingInfo()[0], neuralNetwork_1.getTrainingInfo[1])
+
+
+
+#neuralNetwork_2 = neuralNetwork(784, 600, 5, 10, 3.0, "mnist_train.csv", 20000)
 
 #--[Neural Network Cost]-------------------------------------------------------------------------------------
 #cost_avg = []
