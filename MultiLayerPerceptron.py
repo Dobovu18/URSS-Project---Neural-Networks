@@ -2,6 +2,7 @@ import numpy as np
 import scipy.special
 import random
 import matplotlib.pyplot as plt
+import ActivationFunctions as activation
 
 #Neural network designed to classify images of pictures
 #Training set of data: http://www.pjreddie.com/media/files/mnist_train.csv
@@ -9,9 +10,10 @@ import matplotlib.pyplot as plt
 #Code inspired by 'Make Your Own Neural Network' by Tariq Rashid and 
 #'Deep Learning: An Introduction for Applied Mathematicians' by Catherine F. Higham and Desmond J. Higham.
 
+
 class neuralNetwork:
     #Multi-layer perceptron neural network
-    def __init__(self, inputnodes, hiddennodes, hiddenlayers, outputnodes, learningrate, training_file, sample_size):
+    def __init__(self, inputnodes, hiddennodes, hiddenlayers, outputnodes, learningrate, training_file, sample_size, activation_function, activation_derivative):
         #Create Network Structure
         self.L = hiddenlayers + 2
         self.networkStructure = [hiddennodes] * self.L
@@ -22,16 +24,17 @@ class neuralNetwork:
         self.W = [None] * self.L
         self.b = [None] * self.L
 
+        #Xavier Initialisation
         for i in range(1, self.L):
-            self.W[i] = np.random.normal(0.0, pow(self.networkStructure[i], -0.5), (self.networkStructure[i], self.networkStructure[i - 1]))
-            self.b[i] = np.random.normal(0.0, pow(self.networkStructure[i], -0.5), (self.networkStructure[i], 1))
+            self.W[i] = np.random.normal(0.0, self.networkStructure[i]**-0.5, (self.networkStructure[i], self.networkStructure[i - 1]))
+            self.b[i] = np.random.normal(0.0, self.networkStructure[i]**-0.5, (self.networkStructure[i], 1))
 
         #Learning rate
         self.lr = learningrate
 
         #Activation function and derivative
-        self.activation = lambda x: scipy.special.expit(x) #Sigmoid activation function
-        self.d_activation = lambda x: self.activation(x) * (1 - self.activation(x))
+        self.activation = lambda x: activation_function(x)
+        self.d_activation = lambda x: activation_derivative(x)
 
         #The training data:
         self.training_file = training_file
@@ -90,10 +93,9 @@ class neuralNetwork:
                 #self.counter += 1
                 #self.costval.append(self.getCost())
     
-#    def getTrainingInfo(self):
-#        return range(self.counter), self.costval
 
     def getCost(self):
+        #edit... use np.mean
         #Calculating the cost/empircial risk of the neural network
         #Train the neural network first before calculating the cost
         cost = 0
@@ -121,13 +123,9 @@ class neuralNetwork:
 
 #-----------------------------------------------------------------------------------------------------------
 
-def neuralNetworkPerformanceTest(hidden_nodes = 100, hidden_layers = 2, learning_rate = 0.5, training_sample_size = 20000, epochs = 1, number_of_experiments = 3, training_file = "mnist_train.csv"):
-    #--[Configure the Network]
-    input_nodes = 784 #input_nodes should be left untouched
-    output_nodes = 10 #output_nodes should be left untouched
-
+def neuralNetworkPerformanceTest(input_nodes = 784, output_nodes = 2, hidden_nodes = 16, hidden_layers = 2, learning_rate = 0.8, training_sample_size = 20000, epochs = 5, number_of_experiments = 1, training_file = "mnist_train.csv", test_file = "mnist_test.csv", activation_function = activation.Sigmoid, activation_derivative = activation.d_Sigmoid):
     #--[Test the Network]
-    test_data_file = open("mnist_test.csv",'r')
+    test_data_file = open(test_file,'r')
     test_data_list = test_data_file.readlines()
     test_data_file.close()
 
@@ -137,7 +135,7 @@ def neuralNetworkPerformanceTest(hidden_nodes = 100, hidden_layers = 2, learning
 
     for i in range(N):
         scorecard = []
-        n = neuralNetwork(input_nodes, hidden_nodes, hidden_layers, output_nodes, learning_rate, training_file, training_sample_size)
+        n = neuralNetwork(input_nodes, hidden_nodes, hidden_layers, output_nodes, learning_rate, training_file, training_sample_size, activation_function, activation_derivative)
         n.train_from_file(epochs)
         for record in test_data_list:
             all_values = record.split(',')
@@ -151,25 +149,21 @@ def neuralNetworkPerformanceTest(hidden_nodes = 100, hidden_layers = 2, learning
                 scorecard.append(0)
             
         performance[i] = sum(scorecard) / len(scorecard) * 100
-    
+
     return performance
 
-def neuralNetworkCostFunctionTest(hidden_nodes = 100, hidden_layers = 2, learning_rate = 0.5, training_sample_size = 20000, epochs = 1, number_of_experiments = 3, training_file = "mnist_train.csv", train = True):
-    #--[Configure the Network]
-    input_nodes = 784 #input_nodes should be left untouched
-    output_nodes = 10 #output_nodes should be left untouched
+def neuralNetworkCostFunctionTest(input_nodes = 784, output_nodes = 2, hidden_nodes = 16, hidden_layers = 2, learning_rate = 0.8, training_sample_size = 20000, epochs = 20, number_of_experiments = 3, training_file = "mnist_train.csv", train = True, activation_function = activation.Sigmoid, activation_derivative = activation.d_Sigmoid):
     N = number_of_experiments
-
     cost = [0.0] * N
 
     for i in range(N):
-        n = neuralNetwork(input_nodes, hidden_nodes, hidden_layers, output_nodes, learning_rate, training_file, training_sample_size)
+        n = neuralNetwork(input_nodes, hidden_nodes, hidden_layers, output_nodes, learning_rate, training_file, training_sample_size, activation_function, activation_derivative)
         n.train_from_file(epochs)
         cost[i] = n.getCost()
     
     return cost
 
-#[Variables]#\/\/\/\/\/\/\/\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+#[Variables]
 
 #hiddenLayers = np.array(range(1, 11, 1)) #✔
 #hiddenNodes = np.array(range(25, 625, 25)) #✔
@@ -178,12 +172,25 @@ def neuralNetworkCostFunctionTest(hidden_nodes = 100, hidden_layers = 2, learnin
 #epoch = np.array(range(1, 11)) #✔
 #----------------------------------------------------------------------------------------------------------------
 
-print(neuralNetworkCostFunctionTest())
-print(neuralNetworkPerformanceTest())
+#print(neuralNetworkCostFunctionTest(training_file = "mnist_binary_train.csv", training_sample_size = 12665))
+print(neuralNetworkPerformanceTest(
+    input_nodes = 784,
+    output_nodes = 10,
+    hidden_nodes = 200,
+    hidden_layers = 2,
+    learning_rate = 1E-3,
+    training_sample_size = 60000,
+    epochs = 1,
+    number_of_experiments = 3,
+    training_file = 'mnist_train.csv',
+    test_file = 'mnist_test.csv',
+    activation_function = activation.LeakyReLU,
+    activation_derivative = activation.d_LeakyReLU
+))
 
 #--[Tracking Neural Network Training Progress]---------------------------------------------------------------
-neuralNetwork_1 = neuralNetwork(784, 100, 1, 10, 0.8, "mnist_train.csv", 100)
-neuralNetwork_1.train_from_file(10)
+#neuralNetwork_1 = neuralNetwork(784, 100, 1, 10, 0.8, "mnist_train.csv", 100)
+#neuralNetwork_1.train_from_file(10)
 #plt.plot(neuralNetwork_1.getTrainingInfo()[0], neuralNetwork_1.getTrainingInfo[1])
 
 

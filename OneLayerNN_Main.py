@@ -1,21 +1,21 @@
 import numpy as np
 import scipy.special
-
 import matplotlib.pyplot as plt
+import ActivationFunctions as af
+import random
 
 class neuralNetwork:
     def __init__(self, inputnodes, hiddennodes, outputnodes, learningrate):
         self.inodes = inputnodes
         self.hnodes = hiddennodes
         self.onodes = outputnodes
-
-        self.wih = np.random.normal(0.0, pow(self.hnodes, -0.5), (self.hnodes, self.inodes))
-        self.who = np.random.normal(0.0, pow(self.onodes, -0.5), (self.onodes, self.hnodes))
+        self.wih = np.random.normal(0.0, self.hnodes**-0.5, (self.hnodes, self.inodes))
+        self.who = np.random.normal(0.0, self.onodes**-0.5, (self.onodes, self.hnodes))
 
         self.lr = learningrate
 
-        self.activation = lambda x: scipy.special.expit(x)
-        self.d_activation = lambda x: self.activation(x) * (1 - self.activation(x))
+        self.activation = lambda x: af.ReLU(x)
+        self.d_activation = lambda x: af.d_ReLU(x)
         
         pass
 
@@ -49,8 +49,8 @@ input_nodes = 784
 hidden_nodes = 200
 output_nodes = 10
 
-learning_rate = 0.15
-epochs = 1
+learning_rate = 1E-3
+epochs = 3
 
 n = neuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
 
@@ -86,6 +86,20 @@ for record in test_data_list:
         scorecard.append(0)
     pass
 pass
-
 performance = sum(scorecard) / len(scorecard) * 100
 print("Performance: ", performance)
+
+#record = test_data_list[random.randint(0, 9999)]
+#print("Selected Test: ", record[0])
+#all_values = record.split(',')
+#correct_label = int(all_values[0])
+#inputs = (np.asfarray(all_values[1:]) / 255.0 * 0.99) + 0.01
+##inputs = np.asfarray(all_values[1:])
+#outputs = n.query(inputs)
+#label = np.argmax(outputs)
+#print("Activation outputs:\n", outputs)
+#print("Label: ", label, " @ learning rate", learning_rate)
+
+#img_array = np.asfarray(all_values[1:]).reshape((28,28))
+#plt.imshow(img_array, cmap = 'Greys', interpolation = 'None')
+#plt.show()
