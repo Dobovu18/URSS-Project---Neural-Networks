@@ -1,6 +1,25 @@
 import numpy as np
 #Activation functions from https://cup-of-char.com/writing-activation-functions-from-mostly-scratch-in-python/
 #and https://en.wikipedia.org/wiki/Activation_function
+    
+    #Activation functions are:
+    #    1.  Identity
+    #    2.  Step
+    #    3.  Sigmoid
+    #    4.  Tanh
+    #    5.  Arctan
+    #    6.  Softsign
+    #    7.  ISRU
+    #    8.  ISRLU
+    #    9.  SQNL
+    #    10. ReLU
+    #    11. LeakyReLU
+    #    12. ELU
+    #    13. Softplus
+    #    14. BentID
+    #    15. Swish
+    #    16. Ladle
+    
 
 
 def Identity(x):
