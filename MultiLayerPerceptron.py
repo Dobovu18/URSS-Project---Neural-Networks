@@ -3,7 +3,6 @@ import scipy.special
 import random
 import matplotlib.pyplot as plt
 import ActivationFunctions as activation
-import time
 import openpyxl as xl
 
 #Neural network designed to classify images of pictures
@@ -14,8 +13,8 @@ import openpyxl as xl
 
 
 class neuralNetwork:
-    #Multi-layer perceptron neural network
-    def __init__(self, inputnodes, hiddennodes, hiddenlayers, outputnodes, learningrate, training_file, test_file, interval, sample_size, activation_function, activation_derivative):
+    #Multi-layer perceptron (MLP) neural network
+    def __init__(self, inputnodes = 784, hiddennodes = 200, hiddenlayers = 2, outputnodes = 10, learningrate = 1E-3, training_file = "mnist_train.csv", test_file = "mnist_test.csv", sample_size = 60000, activation_function = activation.Sigmoid, activation_derivative = activation.d_Sigmoid):
         #Create Network Structure
         self.L = hiddenlayers + 2
         self.networkStructure = [hiddennodes] * self.L
@@ -25,6 +24,8 @@ class neuralNetwork:
 
         self.W = [None] * self.L
         self.b = [None] * self.L
+        #np.random.seed(0)
+        #random.seed(0)
 
         #Xavier Initialisation
         for i in range(1, self.L):
@@ -47,6 +48,7 @@ class neuralNetwork:
 
         self.records = self.training_data_list
         if (self.sample_size <= len(self.training_data_list)):
+            #random.seed(0)
             self.records = random.sample(self.training_data_list, self.sample_size)
         elif(self.sample_size > len(self.training_data_file)):
             self.records = self.training_data_list
@@ -56,15 +58,17 @@ class neuralNetwork:
         self.performance_scores = []
         self.counter_values = []
         self.test_file = test_file
-        self.interval = interval
         #self.costval = []
+    
     def reinitialise_parameters(self):
         self.counter = 0
         self.performance_scores = []
         self.counter_values = []
+        #np.random.seed(0)
         for i in range(1, self.L):
             self.W[i] = np.random.normal(0.0, self.networkStructure[i]**-0.5, (self.networkStructure[i], self.networkStructure[i - 1]))
             self.b[i] = np.random.normal(0.0, self.networkStructure[i]**-0.5, (self.networkStructure[i], 1))
+    
     def train(self, inputs_list, targets_list):
         #Train the neural network on one test sample
         inputs = np.array(inputs_list, ndmin = 2).T
@@ -91,9 +95,11 @@ class neuralNetwork:
         for i in reversed(range(1, self.L)):
             self.W[i] -= self.lr * np.dot(d[i], np.transpose(a[i - 1]))
             self.b[i] -= self.lr * d[i]               
+    
     def train_from_file(self, epochs):
         #Train over epochs
         for e in range(epochs):
+            #random.seed(0)
             random.shuffle(self.records)
             for record in self.records:
                 all_values = record.split(',')
@@ -101,28 +107,23 @@ class neuralNetwork:
                 targets = np.zeros(self.networkStructure[self.L - 1]) + 0.01
                 targets[int(all_values[0])] = 0.99
                 self.train(inputs, targets)
-                if (self.counter % self.interval == 0):
-                    self.counter_values.append(self.counter)
+    
+    def track_performance_and_train(self, epochs, interval):
+        #Train over epochs
+        for e in range(epochs):
+            #random.seed(0)
+            random.shuffle(self.records)
+            for record in self.records:
+                all_values = record.split(',')
+                inputs = (np.asfarray(all_values[1:]) / 255.0 * 0.99) + 0.01 #Preparing inputs from file, task/file specific
+                targets = np.zeros(self.networkStructure[self.L - 1]) + 0.01
+                targets[int(all_values[0])] = 0.99
+                self.train(inputs, targets)
+                if (self.counter in interval):
                     self.performance_scores.append(self.checkPerformance(self.test_file))
                 self.counter += 1
-        self.counter_values.append(self.counter)
-        self.performance_scores.append(self.checkPerformance(self.test_file))
-
-                #self.costval.append(self.getCost())    
-    def getCost(self):
-        #edit... use np.mean
-        #Calculating the cost/empircial risk of the neural network
-        #Train the neural network first before calculating the cost
-        cost = 0
-        for record in self.records:
-            all_values = record.split(',')
-            inputs = (np.asfarray(all_values[1:]) / 255.0 * 0.99) + 0.01 #Preparing inputs from file, task/file specific
-            targets = np.zeros(self.networkStructure[self.L - 1]) + 0.01
-            targets[int(all_values[0])] = 0.99
-            err = targets - self.predict(inputs).T
-            cost += pow(np.linalg.norm(err),2)
-        cost /= 2 * self.sample_size
-        return cost
+        self.performance_scores.append(self.checkPerformance(self.test_file))  
+    
     def predict(self, inputs_list):
         #Predict the output given an input
         inputs = np.array(inputs_list, ndmin=2).T
@@ -134,6 +135,7 @@ class neuralNetwork:
             z[i] = np.dot(self.W[i], a[i - 1]) + self.b[i]
             a[i] = self.activation(z[i])
         return a[self.L - 1]
+    
     def checkPerformance(self, filename):
         test_data_file = open(filename, 'r')
         test_data_list = test_data_file.readlines()
@@ -144,7 +146,7 @@ class neuralNetwork:
             all_values = record.split(',')
             correct_label = int(all_values[0])
             inputs = (np.asfarray(all_values[1:]) / 255.0 * 0.99) + 0.01
-            outputs = n.predict(inputs)
+            outputs = self.predict(inputs)
             label = np.argmax(outputs)
             if (label == correct_label):
                 scorecard.append(1)
@@ -153,121 +155,8 @@ class neuralNetwork:
             
         performance = sum(scorecard) / len(scorecard) * 100
         return performance
+    
     def getPerformanceValues(self):
-        return [self.counter_values, self.performance_scores]
+        return self.performance_scores #[self.counter_values, self.performance_scores]
 
 #-----------------------------------------------------------------------------------------------------------
-
-def neuralNetworkCostFunctionTest(input_nodes = 784, output_nodes = 2, hidden_nodes = 16, hidden_layers = 2, learning_rate = 0.8, training_sample_size = 20000, epochs = 20, number_of_experiments = 3, training_file = "mnist_train.csv", train = True, activation_function = activation.Sigmoid, activation_derivative = activation.d_Sigmoid):
-    N = number_of_experiments
-    cost = [0.0] * N
-
-    for i in range(N):
-        n = neuralNetwork(input_nodes, hidden_nodes, hidden_layers, output_nodes, learning_rate, training_file, training_sample_size, activation_function, activation_derivative)
-        n.train_from_file(epochs)
-        cost[i] = n.getCost()
-    
-    return cost
-
-#[Variables]
-
-#hiddenLayers = np.array(range(1, 11, 1)) #✔
-#hiddenNodes = np.array(range(25, 625, 25)) #✔
-#learningRate = np.linspace(0, 3, 61) #✔
-#sampleSize = np.array([100, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000, 60000]) #✔
-#epoch = np.array(range(1, 11)) #✔
-#----------------------------------------------------------------------------------------------------------------
-
-start_time = time.time()
-n=neuralNetwork(
-                inputnodes = 784,
-                hiddennodes = 200,
-                hiddenlayers = 2,
-                outputnodes = 10,
-                learningrate = 1E-3,
-                training_file = "mnist_train.csv",
-                test_file = "mnist_test.csv",
-                sample_size = 20000,
-                interval = 500,
-                activation_function = activation.LeakyReLU,
-                activation_derivative = activation.d_LeakyReLU
-                )
-
-n.train_from_file(3)
-x, y = n.getPerformanceValues()
-plt.plot(x,y)
-plt.show()
-print("Time: %.2fs" %(time.time() - start_time)))
-#print("Performance: ", n.checkPerformance('mnist_test.csv'), " Time: %.2fs" %(time.time() - start_time))
-
-#--[Tracking Neural Network Training Progress]---------------------------------------------------------------
-#neuralNetwork_1 = neuralNetwork(784, 100, 1, 10, 0.8, "mnist_train.csv", 100)
-#neuralNetwork_1.train_from_file(10)
-#plt.plot(neuralNetwork_1.getTrainingInfo()[0], neuralNetwork_1.getTrainingInfo[1])
-
-
-
-#neuralNetwork_2 = neuralNetwork(784, 600, 5, 10, 3.0, "mnist_train.csv", 20000)
-
-#--[Neural Network Cost]-------------------------------------------------------------------------------------
-#cost_avg = []
-#cost_min_err = []
-#cost_max_err = []
-
-#for x in epoch:
-#    cost = neuralNetworkCostFunctionTest(epochs = x) #change
-    
-#    avg = np.average(cost)
-#    min_err = avg - np.min(cost)
-#    max_err = np.max(cost) - avg
-
-#    cost_avg.append(avg)
-#    cost_min_err.append(min_err)
-#    cost_max_err.append(max_err)
-
-#cost_err = [cost_min_err, cost_max_err]
-
-#--[Neural Network Performance]------------------------------------------------------------------------------
-#performance_avg = []
-#performance_min_err = []
-#performance_max_err = []
-
-#Processing values to plot on the graph
-#for x in epoch: #Change
-#        performance = neuralNetworkPerformanceTest(epochs = x) #Change
-
-#        avg = np.average(performance) 
-#        min_err = avg - np.min(performance)
-#        max_err = np.max(performance) - avg
-
-#        performance_avg.append(avg)
-#        performance_min_err.append(min_err)
-#        performance_max_err.append(max_err)
-
-#performance_err = [performance_min_err, performance_max_err]
-
-#--[Graph Creation]------------------------------------------------------------------------------------------
-#legendLabel = "hidden layers = 2\nnodes per hidden layer = 100\nlearning rate = 0.5\ntraining set size = 20000" #change
-#Plotting/Creating the graph
-#plt.errorbar(epoch, cost_avg, #Change
-#            yerr = cost_err,
-#            label = legendLabel,
-#            fmt = '-x',
-#            ecolor = 'red',
-#            capsize = 2)
-
-#plt.title("Number Of Epochs vs Value Of Cost Function") #Change
-#plt.xlabel("Number Of Epochs") #Change
-#plt.ylabel("Value Of Cost Function")
-#plt.legend()
-#plt.grid(b=True,
-#        which='major',
-#        color='#666666', 
-#        linestyle='-')
-#plt.minorticks_on()
-#plt.grid(b=True,
-#        which='minor', 
-#        color='#999999', 
-#        linestyle='-', 
-#        alpha=0.2)
-#plt.show()
