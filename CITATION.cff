@@ -1,0 +1,18 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Warwick URSS-Project-Neural-Networks
+message: >-
+  Summer 2020 Research Project - Investigating the effects
+  certain parameters have on the learning rate and accuracy
+  of a multilayer perceptron neural network.
+type: software
+authors:
+  - given-names: Donnell
+    name-particle: Donnell
+    family-names: Obovu
+    name-suffix: Obovu
+    email: ucahdro@ucl.ac.uk
+    affiliation: UCL
+    orcid: 'https://orcid.org/0000-0002-8856-9933'
